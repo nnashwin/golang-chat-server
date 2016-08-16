@@ -10,10 +10,10 @@ import (
 
 func GetUser(c *gin.Context) {
 	var user User
-	username := c.Params.ByName("username")
+	username := c.Params.ByName("id")
 	coll := GetColl("mongodb://localhost", "chat", "users")
 
-	err := coll.Find(bson.M{"id": username}).One(&user)
+	err := coll.Find(bson.M{"username": username}).One(&user)
 	if err == nil {
 		user := &User{
 			Username: user.Username,
@@ -23,19 +23,29 @@ func GetUser(c *gin.Context) {
 	} else {
 		c.JSON(404, gin.H{"error": "user not found"})
 	}
-
 }
 
 func PostUser(c *gin.Context) {
+	var user User
+	c.Bind(&user)
 
-}
+	log.Printf("%+v", user)
 
-func UpdateUser(c *gin.Context) {
-
-}
-
-func DeleteUser(c *gin.Context) {
-
+	coll := GetColl("mongodb://localhost", "chat", "users")
+	if user.Username != "" && user.Pass != "" {
+		err := coll.Insert(&user)
+		if err == nil {
+			user := &User{
+				Username: user.Username,
+				Pass:     user.Pass,
+			}
+			c.JSON(201, user)
+		} else {
+			log.Fatal(err)
+		}
+	} else {
+		c.JSON(422, gin.H{"error": "fields are empty"})
+	}
 }
 
 func main() {
@@ -46,13 +56,8 @@ func main() {
 	{
 		v1.GET("/users/:id", GetUser)
 		v1.POST("/users", PostUser)
-		v1.PUT("/users/:id", UpdateUser)
-		v1.DELETE("/users/:id", DeleteUser)
 	}
 
-	r.POST("/users", func(c *gin.Context) {
-
-	})
 	r.GET("/", func(c *gin.Context) {
 		http.ServeFile(c.Writer, c.Request, "index.html")
 	})

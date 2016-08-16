@@ -21,15 +21,3 @@ func GetColl(dbAddr string, dbName string, collName string) *mgo.Collection {
 
 	return c
 }
-
-// func GetUser(dbName string, collName string, userName string) User {
-// 	coll := getColl("mongodb://localhost", dbName, collName)
-
-// 	result := User{}
-// 	err := c.Find(bson.M{"id": userName}).One(&result)
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-
-// 	return result
-// }
