@@ -9,14 +9,33 @@ import (
 )
 
 func GetUser(c *gin.Context) {
+	var user User
 	username := c.Params.ByName("username")
 	coll := GetColl("mongodb://localhost", "chat", "users")
 
-	result := User{}
-	err := coll.Find(bson.M{"id": username}).One(&result)
-	if err != nil {
-		log.Fatal(err)
+	err := coll.Find(bson.M{"id": username}).One(&user)
+	if err == nil {
+		user := &User{
+			Username: user.Username,
+			Pass:     user.Pass,
+		}
+		c.JSON(200, user)
+	} else {
+		c.JSON(404, gin.H{"error": "user not found"})
 	}
+
+}
+
+func PostUser(c *gin.Context) {
+
+}
+
+func UpdateUser(c *gin.Context) {
+
+}
+
+func DeleteUser(c *gin.Context) {
+
 }
 
 func main() {
@@ -32,7 +51,6 @@ func main() {
 	}
 
 	r.POST("/users", func(c *gin.Context) {
-		coll := GetColl("mongodb://localhost", "chat", "users")
 
 	})
 	r.GET("/", func(c *gin.Context) {
