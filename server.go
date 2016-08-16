@@ -8,6 +8,13 @@ import (
 	"net/http"
 )
 
+func Cors() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Writer.Header().Add("Access-Control-Allow-Origin", "*")
+		c.Next()
+	}
+}
+
 func GetUser(c *gin.Context) {
 	var user User
 	username := c.Params.ByName("id")
