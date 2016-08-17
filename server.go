@@ -75,6 +75,10 @@ func main() {
 		http.ServeFile(c.Writer, c.Request, "index.html")
 	})
 
+	r.GET("/login", func(c *gin.Context) {
+		http.ServeFile(c.Writer, c.Request, "login.html")
+	})
+
 	r.GET("/signup", func(c *gin.Context) {
 		http.ServeFile(c.Writer, c.Request, "signup.html")
 	})
