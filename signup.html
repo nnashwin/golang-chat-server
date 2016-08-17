@@ -1,7 +1,7 @@
 <html>
   <head>
     <title>Chat</title>
-    <script src="js/signup.js"></script>
+    <script src="./js/signup.js"></script>
   </head>
 
   <style>
@@ -18,10 +18,12 @@
     <center>
       <h3>Sign Up</h3>
       <pre id="chat"></pre>
-      <input placeholder="desired username" id="username" type="text">
-      <input placeholder="password" id="pass" type="pass">
-      <input placeholder="password confirmation" id="pass2" type="pass">
-      <input name="saveButton" type="button" value="Submit">
+      <form id="newUserForm">
+        <input placeholder="desired username" id="username" type="text">
+        <input placeholder="password" id="pass" type="password">
+        <input placeholder="password confirmation" id="pass2" type="password">
+        <input name="saveButton" type="button" value="Submit">
+      </form>
     </center>
     <script>
       

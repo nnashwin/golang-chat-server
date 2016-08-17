@@ -65,6 +65,7 @@ func main() {
 
 	r.Use(gin.Logger())
 	r.Use(gin.Recovery())
+	r.Static("/js", "./js")
 	m := melody.New()
 
 	v1 := r.Group("api/v1")
