@@ -1,17 +1,35 @@
 package main
 
 import (
-	"github.com/dgrijalva/jwt-go"
+	//	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
-	"github.couser)
+	"github.com/olahol/melody"
+	"gopkg.in/mgo.v2/bson"
+	"log"
+	"net/http"
+)
+
+func GetUser(con *gin.Context) {
+	var user User
+	username := con.Params.ByName("username")
+	coll := GetColl("mongodb://localhost", "chat", "users")
+
+	err := coll.Find(bson.M{"username": username}).One(&user)
+	if err != nil {
+		con.JSON(404, "user not found")
 	} else {
-		c.JSON(404, gin.H{"error": "user not found"})
+		response := &User{
+			Username: user.Username,
+			Pass:     user.Pass,
+		}
+		con.JSON(200, response)
 	}
 }
 
-func PostUser(c *gin.Context) {
+func PostUser(con *gin.Context) {
 	var user User
-	c.Bind(&user)
+	con.Bind(&user)
+	log.Println(user)
 
 	coll := GetColl("mongodb://localhost", "chat", "users")
 	if user.Username != "" && user.Pass != "" {
@@ -21,21 +39,22 @@ func PostUser(c *gin.Context) {
 				Username: user.Username,
 				Pass:     user.Pass,
 			}
-			c.JSON(201, user)
+			con.JSON(201, user)
 		} else {
-			log.Fatal(err)
+			con.JSON(500, gin.H{"error": "server insertion error"})
 		}
 	} else {
-		c.JSON(422, gin.H{"error": "fields are empty"})
+		con.JSON(422, gin.H{"error": "fields are empty"})
 	}
 }
 
 func main() {
 	r := gin.New()
 
+	r.Static("/js", "./js")
 	r.Use(gin.Logger())
 	r.Use(gin.Recovery())
-	r.Static("/js", "./js")
+
 	m := melody.New()
 
 	v1 := r.Group("api/v1")
