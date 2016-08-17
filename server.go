@@ -10,7 +10,7 @@ import (
 
 func GetUser(con *gin.Context) {
 	var user User
-	username := con.Params.ByName("username")
+	username := con.Params.ByName("id")
 	coll := GetColl("mongodb://localhost", "chat", "users")
 
 	err := coll.Find(bson.M{"username": username}).One(&user)

@@ -31,7 +31,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         req.onreadystatechange = () => {
             const DONE = 4
-            const OK = 200
+            const OK = 201
             if (req.readyState === DONE) {
                 if (req.status === OK) {
                     console.log(req) 
