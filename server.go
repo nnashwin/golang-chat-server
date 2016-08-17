@@ -25,7 +25,7 @@ func GetUser(con *gin.Context) {
 	}
 }
 
-func PostUser(con *gin.Context) {
+func CreateUser(con *gin.Context) {
 	var user User
 	con.Bind(&user)
 
@@ -56,6 +56,10 @@ func PostUser(con *gin.Context) {
 	}
 }
 
+func LoginUser(con *gin.Context) {
+
+}
+
 func main() {
 	r := gin.New()
 
@@ -68,7 +72,8 @@ func main() {
 	v1 := r.Group("api/v1")
 	{
 		v1.GET("/users/:id", GetUser)
-		v1.POST("/users", PostUser)
+		v1.POST("/users/signup", CreateUser)
+		v1.POST("/users/login", LoginUser)
 	}
 
 	r.GET("/", func(c *gin.Context) {
