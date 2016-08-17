@@ -3,37 +3,7 @@ package main
 import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
-	"github.com/olahol/melody"
-	"gopkg.in/mgo.v2/bson"
-	"log"
-	"net/http"
-)
-
-func Cors() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		c.Writer.Header().Add("Access-Control-Allow-Origin", "*")
-		c.Next()
-	}
-}
-
-type MyCustomClaims struct {
-	Username string `json:"username"`
-	Pass     string `json:"pass"`
-	jwt.StandardClaims
-}
-
-func GetUser(c *gin.Context) {
-	var user User
-	username := c.Params.ByName("id")
-	coll := GetColl("mongodb://localhost", "chat", "users")
-
-	err := coll.Find(bson.M{"username": username}).One(&user)
-	if err == nil {
-		user := &User{
-			Username: user.Username,
-			Pass:     user.Pass,
-		}
-		c.JSON(200, user)
+	"github.couser)
 	} else {
 		c.JSON(404, gin.H{"error": "user not found"})
 	}
