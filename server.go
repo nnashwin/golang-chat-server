@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"github.com/olahol/melody"
 	"gopkg.in/mgo.v2/bson"
@@ -13,6 +14,12 @@ func Cors() gin.HandlerFunc {
 		c.Writer.Header().Add("Access-Control-Allow-Origin", "*")
 		c.Next()
 	}
+}
+
+type MyCustomClaims struct {
+	Username string `json:"username"`
+	Pass     string `json:"pass"`
+	jwt.StandardClaims
 }
 
 func GetUser(c *gin.Context) {
@@ -36,8 +43,6 @@ func PostUser(c *gin.Context) {
 	var user User
 	c.Bind(&user)
 
-	log.Printf("%+v", user)
-
 	coll := GetColl("mongodb://localhost", "chat", "users")
 	if user.Username != "" && user.Pass != "" {
 		err := coll.Insert(&user)
@@ -56,7 +61,10 @@ func PostUser(c *gin.Context) {
 }
 
 func main() {
-	r := gin.Default()
+	r := gin.New()
+
+	r.Use(gin.Logger())
+	r.Use(gin.Recovery())
 	m := melody.New()
 
 	v1 := r.Group("api/v1")
@@ -67,6 +75,10 @@ func main() {
 
 	r.GET("/", func(c *gin.Context) {
 		http.ServeFile(c.Writer, c.Request, "index.html")
+	})
+
+	r.GET("/signup", func(c *gin.Context) {
+		http.ServeFile(c.Writer, c.Request, "signup.html")
 	})
 
 	r.GET("/ws", func(c *gin.Context) {
