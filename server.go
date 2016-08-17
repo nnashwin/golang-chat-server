@@ -5,7 +5,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/olahol/melody"
 	"gopkg.in/mgo.v2/bson"
-	"log"
 	"net/http"
 )
 
@@ -29,22 +28,31 @@ func GetUser(con *gin.Context) {
 func PostUser(con *gin.Context) {
 	var user User
 	con.Bind(&user)
-	log.Println(user)
 
 	coll := GetColl("mongodb://localhost", "chat", "users")
-	if user.Username != "" && user.Pass != "" {
-		err := coll.Insert(&user)
-		if err == nil {
-			user := &User{
-				Username: user.Username,
-				Pass:     user.Pass,
-			}
-			con.JSON(201, user)
-		} else {
-			con.JSON(500, gin.H{"error": "server insertion error"})
-		}
+	err := coll.Find(bson.M{"username": user.Username}).One(&user)
+	if err == nil {
+		con.JSON(409, gin.H{"error": "That username already exists"})
 	} else {
-		con.JSON(422, gin.H{"error": "fields are empty"})
+
+		if user.Username != "" && user.Pass != "" {
+			err := coll.Insert(&user)
+			if err == nil {
+				user := &User{
+					Username: user.Username,
+					Pass:     user.Pass,
+				}
+
+				con.JSON(201, user)
+
+			} else {
+				con.JSON(500, gin.H{"error": "server insertion error"})
+			}
+
+		} else {
+			con.JSON(422, gin.H{"error": "fields are empty"})
+		}
+
 	}
 }
 
