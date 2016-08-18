@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	//	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"github.com/olahol/melody"
@@ -57,7 +58,21 @@ func CreateUser(con *gin.Context) {
 }
 
 func LoginUser(con *gin.Context) {
+	var userReq User
+	con.Bind(&userReq)
 
+	userInfo := User{}
+	coll := GetColl("mongodb://localhost", "chat", "users")
+	err := coll.Find(bson.M{"username": userReq.Username}).One(&userInfo)
+	log.Printf("%+v", userInfo)
+	log.Printf("%+v", userReq)
+
+	passMatch := (userInfo.Pass == userReq.Pass)
+	if err == nil && passMatch == true {
+		con.JSON(200, userInfo)
+	} else {
+		con.JSON(400, gin.H{"error": "That Password is incorrect"})
+	}
 }
 
 func main() {
