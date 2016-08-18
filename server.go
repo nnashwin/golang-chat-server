@@ -1,13 +1,44 @@
 package main
 
 import (
-	"log"
-	//	"github.com/dgrijalva/jwt-go"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"github.com/olahol/melody"
 	"gopkg.in/mgo.v2/bson"
+	"log"
 	"net/http"
+	//	"time"
 )
+
+var mySigningKey = []byte("secret")
+
+func SendToken(con *gin.Context) {
+	type CustomClaims struct {
+		Authorized bool `json:"auth"`
+		jwt.StandardClaims
+	}
+
+	/* set token claims */
+	claims := CustomClaims{
+		true,
+		jwt.StandardClaims{
+			ExpiresAt: 15000,
+			Issuer:    "test",
+		},
+	}
+
+	/* create token */
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	/* sign the token with a secret */
+	tokenString, err := token.SignedString(mySigningKey)
+	if err != nil {
+		log.Fatal(err)
+	}
+	con.JSON(200, tokenString)
+}
+
+// Routes
 
 func GetUser(con *gin.Context) {
 	var user User
@@ -90,6 +121,8 @@ func main() {
 		v1.POST("/users/signup", CreateUser)
 		v1.POST("/users/login", LoginUser)
 	}
+
+	r.POST("/get-token", SendToken)
 
 	r.GET("/", func(c *gin.Context) {
 		http.ServeFile(c.Writer, c.Request, "index.html")
