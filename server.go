@@ -1,4 +1,4 @@
-package main
+package chat
 
 import (
 	jwt "github.com/dgrijalva/jwt-go"
@@ -13,7 +13,7 @@ import (
 
 var mySigningKey = []byte("secret")
 
-func SendToken(con *gin.Context) {
+func CreateToken() *jwt.Token {
 	type CustomClaims struct {
 		Authorized bool `json:"auth"`
 		jwt.StandardClaims
@@ -32,11 +32,7 @@ func SendToken(con *gin.Context) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
 	/* sign the token with a secret */
-	tokenString, err := token.SignedString(mySigningKey)
-	if err != nil {
-		log.Fatal(err)
-	}
-	con.JSON(200, tokenString)
+	return token
 }
 
 // Routes
@@ -67,7 +63,6 @@ func CreateUser(con *gin.Context) {
 	if err == nil {
 		con.JSON(409, gin.H{"error": "That username already exists"})
 	} else {
-
 		if user.Username != "" && user.Pass != "" {
 			err := coll.Insert(&user)
 			if err == nil {
@@ -123,7 +118,7 @@ func main() {
 		v1.POST("/users/login", LoginUser)
 	}
 
-	r.POST("/get-token", SendToken)
+	//r.POST("/get-token", SendToken)
 
 	r.GET("/", func(c *gin.Context) {
 		http.ServeFile(c.Writer, c.Request, "index.html")
