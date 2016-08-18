@@ -1,9 +1,10 @@
 package main
 
 import (
-	"github.com/dgrijalva/jwt-go"
+	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"github.com/olahol/melody"
+	db "github.com/ttymed/mwrap"
 	"gopkg.in/mgo.v2/bson"
 	"log"
 	"net/http"
@@ -43,7 +44,7 @@ func SendToken(con *gin.Context) {
 func GetUser(con *gin.Context) {
 	var user User
 	username := con.Params.ByName("id")
-	coll := GetColl("mongodb://localhost", "chat", "users")
+	coll, _ := db.GetColl("mongodb://localhost", "chat", "users")
 
 	err := coll.Find(bson.M{"username": username}).One(&user)
 	if err != nil {
@@ -61,7 +62,7 @@ func CreateUser(con *gin.Context) {
 	var user User
 	con.Bind(&user)
 
-	coll := GetColl("mongodb://localhost", "chat", "users")
+	coll, _ := db.GetColl("mongodb://localhost", "chat", "users")
 	err := coll.Find(bson.M{"username": user.Username}).One(&user)
 	if err == nil {
 		con.JSON(409, gin.H{"error": "That username already exists"})
@@ -93,7 +94,7 @@ func LoginUser(con *gin.Context) {
 	con.Bind(&userReq)
 
 	userInfo := User{}
-	coll := GetColl("mongodb://localhost", "chat", "users")
+	coll, _ := db.GetColl("mongodb://localhost", "chat", "users")
 	err := coll.Find(bson.M{"username": userReq.Username}).One(&userInfo)
 	log.Printf("%+v", userInfo)
 	log.Printf("%+v", userReq)
