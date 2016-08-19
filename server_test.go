@@ -24,10 +24,15 @@ func TestCreateToken(t *testing.T) {
 	testToken := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
 	if reflect.TypeOf(testToken) != reflect.TypeOf(actualToken) {
-		t.Errorf("Test failed, not creating token")
+		t.Errorf("Test failed, CreateToken not creating token")
 	}
 }
 
 func TestGetUser(t *testing.T) {
+	var expected chat.User
+	actual := chat.GetUser("test", "test", "test")
 
+	if reflect.TypeOf(expected) != reflect.TypeOf(actual) {
+		t.Errorf("Test failed, GetUser not returning user")
+	}
 }

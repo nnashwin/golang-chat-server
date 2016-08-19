@@ -54,9 +54,9 @@ func HandleGetUser(con *gin.Context) {
 	}
 }
 
-func GetUser(username string) User {
+func GetUser(username string, dbName string, collName string) User {
 	var user User
-	coll, _ := db.GetColl("mongodb://localhost", "chat", "users")
+	coll, _ := db.GetColl("mongodb://localhost", dbName, collName)
 
 	err := coll.Find(bson.M{"username": username}).One(&user)
 	if err != nil {
