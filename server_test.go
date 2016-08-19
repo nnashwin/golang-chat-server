@@ -3,7 +3,6 @@ package chat_test
 import (
 	jwt "github.com/dgrijalva/jwt-go"
 	chat "github.com/ttymed/chat-server"
-	"log"
 	"reflect"
 	"testing"
 )
@@ -23,5 +22,12 @@ func TestCreateToken(t *testing.T) {
 	}
 	actualToken := chat.CreateToken()
 	testToken := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	log.Println(reflect.TypeOf(testToken) == reflect.TypeOf(actualToken))
+
+	if reflect.TypeOf(testToken) != reflect.TypeOf(actualToken) {
+		t.Errorf("Test failed, not creating token")
+	}
+}
+
+func TestGetUser(t *testing.T) {
+
 }

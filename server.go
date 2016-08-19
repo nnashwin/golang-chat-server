@@ -37,7 +37,7 @@ func CreateToken() *jwt.Token {
 
 // Routes
 
-func GetUser(con *gin.Context) {
+func HandleGetUser(con *gin.Context) {
 	var user User
 	username := con.Params.ByName("id")
 	coll, _ := db.GetColl("mongodb://localhost", "chat", "users")
@@ -52,6 +52,17 @@ func GetUser(con *gin.Context) {
 		}
 		con.JSON(200, response)
 	}
+}
+
+func GetUser(username string) User {
+	var user User
+	coll, _ := db.GetColl("mongodb://localhost", "chat", "users")
+
+	err := coll.Find(bson.M{"username": username}).One(&user)
+	if err != nil {
+		log.Fatal("User not found")
+	}
+	return user
 }
 
 func CreateUser(con *gin.Context) {
@@ -113,7 +124,7 @@ func main() {
 
 	v1 := r.Group("api/v1")
 	{
-		v1.GET("/users/:id", GetUser)
+		v1.GET("/users/:id", HandleGetUser)
 		v1.POST("/users/signup", CreateUser)
 		v1.POST("/users/login", LoginUser)
 	}
