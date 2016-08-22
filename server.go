@@ -9,6 +9,7 @@ import (
 	"gopkg.in/mgo.v2/bson"
 	"log"
 	"net/http"
+	"reflect"
 	"time"
 )
 
@@ -130,8 +131,8 @@ func LoginUser(con *gin.Context) {
 	userInfo, err := GetUser(userReq.Username, "chat", "users")
 	passMatch := (userInfo.Pass == userReq.Pass)
 	if err == nil && passMatch == true {
-		token := CreateToken()
-		con.JSON(200, token)
+		tokenString := CreateToken()
+		con.JSON(200, tokenString)
 	} else if err == nil && passMatch == false {
 		con.JSON(400, gin.H{"error": "That Password is incorrect"})
 	} else if err != nil {
@@ -139,14 +140,38 @@ func LoginUser(con *gin.Context) {
 	}
 }
 
+func CheckToken(con *gin.Context) {
+	type TokenString struct {
+		Token string `json:"jwtString"`
+	}
+
+	var tokenString TokenString
+	con.Bind(&tokenString)
+	log.Println(tokenString.Token)
+	log.Println(reflect.TypeOf(tokenString.Token))
+
+	if tokenString.Token != "" {
+		isTokenValid := ParseToken(tokenString.Token)
+		if isTokenValid {
+			con.JSON(200, gin.H{"jwtString": "Authorized"})
+		} else if !isTokenValid {
+			con.JSON(400, gin.H{"error": "User is unauthorized"})
+		}
+	}
+	if tokenString.Token == "" {
+		con.JSON(401, gin.H{"error": "the token string is blank"})
+	}
+}
+
 func TokenAuthMiddleware(con *gin.Context) {
-	tokenString := con.Request.Header["Authorization"]
-
-	isTokenValid := ParseToken(tokenString[0])
-	log.Println(isTokenValid)
-
-	log.Println("check for token")
-
+	if tokenString, ok := con.Request.Header["Authorization"]; ok {
+		isTokenValid := ParseToken(tokenString[0])
+		if isTokenValid {
+			log.Println("token is valid")
+		} else if !isTokenValid {
+			log.Println("token is invalid")
+		}
+	}
 	con.Next()
 }
 
@@ -164,19 +189,20 @@ func main() {
 		v1.GET("/users/:id", HandleGetUser)
 		v1.POST("/users/signup", HandleSignup)
 		v1.POST("/users/login", LoginUser)
+		v1.POST("/users/checkAuth", CheckToken)
 	}
 
 	tAuth := r.Group("/auth")
 	tAuth.Use(TokenAuthMiddleware)
 	{
-		tAuth.GET("/", func(con *gin.Context) {
-			http.ServeFile(con.Writer, con.Request, "index.html")
-		})
-
 		tAuth.GET("/ws", func(c *gin.Context) {
 			m.HandleRequest(c.Writer, c.Request)
 		})
 	}
+
+	r.GET("/", func(con *gin.Context) {
+		http.ServeFile(con.Writer, con.Request, "index.html")
+	})
 
 	r.GET("/login", func(c *gin.Context) {
 		http.ServeFile(c.Writer, c.Request, "login.html")
