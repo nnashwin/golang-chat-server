@@ -138,7 +138,13 @@ func LoginUser(con *gin.Context) {
 		con.JSON(400, gin.H{"error": "You could not be logged in.  Please check your credentials and try again."})
 	}
 }
+
 func TokenAuthMiddleware(con *gin.Context) {
+	tokenString := con.Request.Header["Authorization"]
+
+	isTokenValid := ParseToken(tokenString[0])
+	log.Println(isTokenValid)
+
 	log.Println("check for token")
 
 	con.Next()
