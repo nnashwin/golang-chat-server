@@ -138,6 +138,11 @@ func LoginUser(con *gin.Context) {
 		con.JSON(400, gin.H{"error": "You could not be logged in.  Please check your credentials and try again."})
 	}
 }
+func TokenAuthMiddleware(con *gin.Context) {
+	log.Println("check for token")
+
+	con.Next()
+}
 
 func main() {
 	r := gin.New()
@@ -155,11 +160,17 @@ func main() {
 		v1.POST("/users/login", LoginUser)
 	}
 
-	//r.POST("/get-token", SendToken)
+	tAuth := r.Group("/auth")
+	tAuth.Use(TokenAuthMiddleware)
+	{
+		tAuth.GET("/", func(con *gin.Context) {
+			http.ServeFile(con.Writer, con.Request, "index.html")
+		})
 
-	r.GET("/", func(c *gin.Context) {
-		http.ServeFile(c.Writer, c.Request, "index.html")
-	})
+		tAuth.GET("/ws", func(c *gin.Context) {
+			m.HandleRequest(c.Writer, c.Request)
+		})
+	}
 
 	r.GET("/login", func(c *gin.Context) {
 		http.ServeFile(c.Writer, c.Request, "login.html")
@@ -167,10 +178,6 @@ func main() {
 
 	r.GET("/signup", func(c *gin.Context) {
 		http.ServeFile(c.Writer, c.Request, "signup.html")
-	})
-
-	r.GET("/ws", func(c *gin.Context) {
-		m.HandleRequest(c.Writer, c.Request)
 	})
 
 	m.HandleMessage(func(s *melody.Session, msg []byte) {

@@ -21,7 +21,7 @@
     </center>
 
     <script>
-      var url = "ws://" + window.location.host + "/ws";
+      var url = "ws://" + window.location.host + "/auth/ws";
       var ws = new WebSocket(url);
       var name = "Guest" + Math.floor(Math.random() * 1000);
       var chat = document.getElementById("chat");
