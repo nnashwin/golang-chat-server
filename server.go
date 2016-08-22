@@ -1,4 +1,4 @@
-package chat
+package main
 
 import (
 	"errors"
@@ -9,12 +9,12 @@ import (
 	"gopkg.in/mgo.v2/bson"
 	"log"
 	"net/http"
-	//	"time"
+	"time"
 )
 
 var mySigningKey = []byte("secret")
 
-func CreateToken() *jwt.Token {
+func CreateToken() string {
 	type CustomClaims struct {
 		Authorized bool `json:"auth"`
 		jwt.StandardClaims
@@ -24,7 +24,7 @@ func CreateToken() *jwt.Token {
 	claims := CustomClaims{
 		true,
 		jwt.StandardClaims{
-			ExpiresAt: 15000,
+			ExpiresAt: time.Now().Add(time.Minute * 5).Unix(),
 			Issuer:    "test",
 		},
 	}
@@ -33,7 +33,28 @@ func CreateToken() *jwt.Token {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
 	/* sign the token with a secret */
-	return token
+	signedToken, _ := token.SignedString(mySigningKey)
+
+	return signedToken
+}
+
+func ParseToken(tokenStr string) bool {
+	type CustomClaims struct {
+		Authorized bool `json:"auth"`
+		jwt.StandardClaims
+	}
+
+	token, err := jwt.ParseWithClaims(tokenStr, &CustomClaims{}, func(token *jwt.Token) (interface{}, error) {
+		return mySigningKey, nil
+	})
+
+	if claims, ok := token.Claims.(*CustomClaims); ok && token.Valid {
+		log.Printf("%v %v", claims.Authorized, claims.StandardClaims.ExpiresAt)
+		return true
+	} else {
+		log.Println(err)
+		return false
+	}
 }
 
 // Routes
@@ -52,35 +73,6 @@ func HandleGetUser(con *gin.Context) {
 			Pass:     user.Pass,
 		}
 		con.JSON(200, response)
-	}
-}
-
-func HandleCreateUser(con *gin.Context) {
-	var user User
-	con.Bind(&user)
-
-	coll, _ := db.GetColl("mongodb://localhost", "chat", "users")
-	err := coll.Find(bson.M{"username": user.Username}).One(&user)
-	if err == nil {
-		con.JSON(409, gin.H{"error": "That username already exists"})
-	} else {
-		if user.Username != "" && user.Pass != "" {
-			err := coll.Insert(&user)
-			if err == nil {
-				user := &User{
-					Username: user.Username,
-					Pass:     user.Pass,
-				}
-
-				con.JSON(201, user)
-
-			} else {
-				con.JSON(500, gin.H{"error": "server insertion error"})
-			}
-
-		} else {
-			con.JSON(422, gin.H{"error": "fields are empty"})
-		}
 	}
 }
 
@@ -118,7 +110,7 @@ func GetUser(username string, dbName string, collName string) (User, error) {
 
 	err := coll.Find(bson.M{"username": username}).One(&user)
 	if err != nil {
-		return User{}, errors.New("The user was not found correctly")
+		return User{}, errors.New("The User Does Not Exist")
 	}
 	return user, nil
 }
@@ -135,18 +127,15 @@ func CreateUser(user User, dbName string, collName string) error {
 func LoginUser(con *gin.Context) {
 	var userReq User
 	con.Bind(&userReq)
-
-	userInfo := User{}
-	coll, _ := db.GetColl("mongodb://localhost", "chat", "users")
-	err := coll.Find(bson.M{"username": userReq.Username}).One(&userInfo)
-	log.Printf("%+v", userInfo)
-	log.Printf("%+v", userReq)
-
+	userInfo, err := GetUser(userReq.Username, "chat", "users")
 	passMatch := (userInfo.Pass == userReq.Pass)
 	if err == nil && passMatch == true {
-		con.JSON(200, userInfo)
-	} else {
+		token := CreateToken()
+		con.JSON(200, token)
+	} else if err == nil && passMatch == false {
 		con.JSON(400, gin.H{"error": "That Password is incorrect"})
+	} else if err != nil {
+		con.JSON(400, gin.H{"error": "You could not be logged in.  Please check your credentials and try again."})
 	}
 }
 
@@ -162,7 +151,7 @@ func main() {
 	v1 := r.Group("api/v1")
 	{
 		v1.GET("/users/:id", HandleGetUser)
-		v1.POST("/users/signup", HandleCreateUser)
+		v1.POST("/users/signup", HandleSignup)
 		v1.POST("/users/login", LoginUser)
 	}
 

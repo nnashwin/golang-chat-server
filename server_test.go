@@ -1,10 +1,11 @@
-package chat_test
+package main_test
 
 import (
 	jwt "github.com/dgrijalva/jwt-go"
 	chat "github.com/ttymed/chat-server"
 	"reflect"
 	"testing"
+	"time"
 )
 
 func TestCreateToken(t *testing.T) {
@@ -16,15 +17,24 @@ func TestCreateToken(t *testing.T) {
 	claims := CustomClaims{
 		true,
 		jwt.StandardClaims{
-			ExpiresAt: 15000,
+			ExpiresAt: time.Now().Add(time.Minute * 5).Unix(),
 			Issuer:    "test",
 		},
 	}
-	actualToken := chat.CreateToken()
+	actualTokenString := chat.CreateToken()
 	testToken := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	signedTest, _ := testToken.SignedString([]byte("secret"))
 
-	if reflect.TypeOf(testToken) != reflect.TypeOf(actualToken) {
+	if reflect.TypeOf(signedTest) != reflect.TypeOf(actualTokenString) {
 		t.Errorf("Test failed, CreateToken not creating token")
+	}
+}
+
+func TestParseToken(t *testing.T) {
+	tokenString := chat.CreateToken()
+	isTokenValid := chat.ParseToken(tokenString)
+	if isTokenValid != true {
+		t.Errorf("Test failed, the token was not valid")
 	}
 }
 

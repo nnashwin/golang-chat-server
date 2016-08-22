@@ -1,4 +1,4 @@
-package chat
+package main
 
 type User struct {
 	Username string `db:"username" json:"username"`
