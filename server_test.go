@@ -30,9 +30,19 @@ func TestCreateToken(t *testing.T) {
 
 func TestGetUser(t *testing.T) {
 	var expected chat.User
-	actual := chat.GetUser("test", "test", "test")
+	actual, _ := chat.GetUser("test", "test", "test")
 
 	if reflect.TypeOf(expected) != reflect.TypeOf(actual) {
 		t.Errorf("Test failed, GetUser not returning user")
+	}
+}
+
+func TestCreateUser(t *testing.T) {
+	chat.CreateUser(chat.User{"test1", "test1"}, "test", "test")
+	actual, _ := chat.GetUser("test1", "test", "test")
+	expected := chat.User{"test1", "test1"}
+
+	if actual.Username != expected.Username || actual.Pass != expected.Pass {
+		t.Errorf("Test failed, user not being created")
 	}
 }

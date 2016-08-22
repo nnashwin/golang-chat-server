@@ -1,6 +1,7 @@
 package chat
 
 import (
+	"errors"
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"github.com/olahol/melody"
@@ -54,18 +55,7 @@ func HandleGetUser(con *gin.Context) {
 	}
 }
 
-func GetUser(username string, dbName string, collName string) User {
-	var user User
-	coll, _ := db.GetColl("mongodb://localhost", dbName, collName)
-
-	err := coll.Find(bson.M{"username": username}).One(&user)
-	if err != nil {
-		log.Fatal("User not found")
-	}
-	return user
-}
-
-func CreateUser(con *gin.Context) {
+func HandleCreateUser(con *gin.Context) {
 	var user User
 	con.Bind(&user)
 
@@ -91,8 +81,55 @@ func CreateUser(con *gin.Context) {
 		} else {
 			con.JSON(422, gin.H{"error": "fields are empty"})
 		}
-
 	}
+}
+
+func HandleSignup(con *gin.Context) {
+	var user User
+	con.Bind(&user)
+
+	_, err := GetUser(user.Username, "chat", "users")
+	if err == nil {
+		con.JSON(409, gin.H{"error": "That username already exists"})
+	} else {
+		if user.Username != "" && user.Pass != "" {
+			err := CreateUser(user, "chat", "users")
+			if err == nil {
+				user := &User{
+					Username: user.Username,
+					Pass:     user.Pass,
+				}
+
+				con.JSON(201, user)
+
+			} else {
+				con.JSON(500, gin.H{"error": "server insertion error"})
+			}
+
+		} else {
+			con.JSON(422, gin.H{"error": "fields are empty"})
+		}
+	}
+}
+
+func GetUser(username string, dbName string, collName string) (User, error) {
+	var user User
+	coll, _ := db.GetColl("mongodb://localhost", dbName, collName)
+
+	err := coll.Find(bson.M{"username": username}).One(&user)
+	if err != nil {
+		return User{}, errors.New("The user was not found correctly")
+	}
+	return user, nil
+}
+
+func CreateUser(user User, dbName string, collName string) error {
+	coll, _ := db.GetColl("mongodb://localhost", dbName, collName)
+	err := coll.Insert(&user)
+	if err != nil {
+		return errors.New("the user could not be created.  Check CreateUser function.")
+	}
+	return nil
 }
 
 func LoginUser(con *gin.Context) {
@@ -125,7 +162,7 @@ func main() {
 	v1 := r.Group("api/v1")
 	{
 		v1.GET("/users/:id", HandleGetUser)
-		v1.POST("/users/signup", CreateUser)
+		v1.POST("/users/signup", HandleCreateUser)
 		v1.POST("/users/login", LoginUser)
 	}
 
