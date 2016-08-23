@@ -18,8 +18,9 @@ document.addEventListener("DOMContentLoaded", () => {
             const OK = 200
             if (req.readyState === DONE) {
                 if (req.status === OK) {
-                    console.log(req) 
-                    console.log(req.status) 
+                    localStorage.removeItem('CTString')
+                    localStorage.setItem('CTString', req.response)
+                    //window.location = "/"
                 } else {
                     failure(req.status)
                 }

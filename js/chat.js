@@ -1,19 +1,7 @@
 document.addEventListener("DOMContentLoaded", () => {
-    var isLoggedIn = false
-    var checkLogin = function (loginBool) {
-        if (checkAuth(localStorage.getItem('CTString')) === true) {
-            loginBool = true
-        } else if (checkAuth(localStorage.getItem('CTString')) === false){
-            loginBool = false
-        }
-        if (loginBool === false) {
-            window.location = "/login"
-        }
-    }
-
-    var checkAuth = function (jwtStr) {
+    var checkAuth = function () {
         let data = {}
-        data["Token"] = jwtStr
+        data["Token"] = localStorage.getItem("CTString")
 
         let req = new XMLHttpRequest() 
 
@@ -26,10 +14,25 @@ document.addEventListener("DOMContentLoaded", () => {
             const OK = 200
             if (req.readyState === DONE) {
                 if (req.status === OK) {
+                    console.log('checkedOut')
                     return true
                 } else {
+                    console.log("notCheckedOut")
                     return false
                 }
+            }
+        }
+
+        var checkLogin = function () {
+            let isLoggedIn = false
+            if (checkAuth(localStorage.getItem('CTString')) === true) {
+                isLoggedIn = true
+            } else if (checkAuth(localStorage.getItem('CTString')) === false){
+                isLoggedIn = false
+            }
+
+            if (isLoggedIn === false) {
+                //window.location = "/login"
             }
         }
 
@@ -38,11 +41,11 @@ document.addEventListener("DOMContentLoaded", () => {
         req.setRequestHeader("X-Requested-With", "XMLHttpRequest")
         req.setRequestHeader("Content-Type", "application/json;charset=UTF-8")
 
-        req.send(JSON.stringify(data))
+        req.send(JSON.stringify(data.Token))
     }
 
-    checkLogin(isLoggedIn)
-    window.setInterval(checkLogin, 240000, isLoggedIn)
+    checkLogin()
+    window.setInterval(checkLogin, 240000)
 
 
     var url = "ws://" + window.location.host + "/auth/ws";

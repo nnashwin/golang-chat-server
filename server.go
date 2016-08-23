@@ -147,7 +147,7 @@ func CheckToken(con *gin.Context) {
 
 	var tokenString TokenString
 	con.Bind(&tokenString)
-	log.Println(tokenString.Token)
+	log.Printf("%+v", tokenString)
 	log.Println(reflect.TypeOf(tokenString.Token))
 
 	if tokenString.Token != "" {
