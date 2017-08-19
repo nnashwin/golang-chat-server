@@ -1,2 +1,2 @@
-#golang chat server 
- ##a simple chat server in golang
+# golang chat server 
+## a simple chat server in golang
